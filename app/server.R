@@ -1,9 +1,3 @@
-# case_when(input$boro == "MANHATTAN" ~ manhattan_precincts,
-#           input$boro == "STATEN ISLAND" ~ staten_island_precincts,
-#           input$boro == "QUEENS", ~ queens_precincts,
-#           input$boro == "BROOKLYN" ~ brooklyn_precint,
-#           input$boro == "BRONX" ~ bronx_precincts
-# )
 function(input, output){
   output$p <- renderPlotly({
     if(input$boro == "MANHATTAN") precinct = manhattan_precincts
@@ -13,8 +7,56 @@ function(input, output){
     if(input$boro == "BROOKLYN") precinct = brooklyn_precincts
     if(input$boro == "ALL") precinct = precincts
     
-    if(input$boro != "ALL") q = nyc%>%filter(input$boro == BORO_NM) %>% group_by(ADDR_PCT_CD) %>% summarise(n = n())
-    if(input$boro == "ALL") q = nyc %>% group_by(ADDR_PCT_CD) %>% summarise(n = n())
+    
+    raw = ifelse(input$radio == T,T,F)
+    all_boro = input$boro == "ALL"
+    
+    if(raw & all_boro) q =  nyc %>% 
+      filter(year %in% input$yearRange, OFNS_DESC %in% input$crime)%>% 
+      group_by(ADDR_PCT_CD) %>% 
+      summarise(n = n())
+    if(raw & !all_boro) q = nyc %>% 
+      filter(year %in% input$yearRange, BORO_NM == input$boro, OFNS_DESC %in% input$crime )%>% 
+      group_by(ADDR_PCT_CD) %>% 
+      summarise(n = n())
+    
+    if(!raw & all_boro) q = 
+      nyc%>%
+      filter(year %in% input$yearRange, OFNS_DESC %in%  input$crime ) %>%
+      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+      summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+      mutate(total = sum(num_crime_occurences))%>% 
+      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+      ungroup()%>%
+      mutate(n = total/population)
+    
+    if(!raw & !all_boro) q =
+    nyc%>%
+      filter( BORO_NM == input$boro,year %in% input$yearRange, OFNS_DESC %in%  input$crime ) %>%
+      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+      summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+      mutate(total = sum(num_crime_occurences))%>% 
+      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+      ungroup()%>%
+      mutate(n = total/population)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    # nyc %>% filter(year %in% input$yearRange) %>% group_by(ADDR_PCT_CD) %>% 
+    
+    # if(!all_boro) q = nyc%>%filter(input$boro == BORO_NM ) %>%  filter(year %in% input$yearRange) %>% filter(OFNS_DESC %in% input$crime) %>%group_by(ADDR_PCT_CD) %>% summarise(n = n())
+    # if(all_boro) q = nyc %>% filter(year %in% input$yearRange)%>% group_by(ADDR_PCT_CD) %>% summarise(n = n())
+    
+    
     plot_ly(q) %>% add_trace(
       type = "choropleth",
       geojson = precinct,

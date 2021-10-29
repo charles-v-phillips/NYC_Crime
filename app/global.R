@@ -3,6 +3,7 @@ library(dplyr)
 library(shinydashboard)
 library(plotly)
 library(rjson)
+library(shinyWidgets)
 source('../ui_components/boro_tab.R')
 
 precincts <- fromJSON(file='../geo_jsons/precincts-2.json' )
