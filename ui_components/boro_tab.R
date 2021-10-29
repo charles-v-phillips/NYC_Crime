@@ -1,5 +1,5 @@
 side_bar  <- dashboardSidebar(selectizeInput(inputId='boro',label='Borough',
-                                          choices=unique(nyc$BORO_NM)),
+                                          choices=append(unique(nyc$BORO_NM),"ALL")),
                            selectizeInput(inputId = 'crime', label = 'Crime',
                                           choices = unique(nyc$OFNS_DESC)),
                            selectizeInput(inputId = "year", label = "Year",
