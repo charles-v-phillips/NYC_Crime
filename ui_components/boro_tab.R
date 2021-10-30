@@ -27,7 +27,17 @@ dashboard_body <- dashboardBody(
     tabPanel(
       "Component 2",plotlyOutput("p"),
             fluidRow(column(12,plotOutput("g2")))
-                                             )
+                                             ),
+    tabPanel("Gender",
+             fluidRow(plotOutput("suspectGenderPieCharts")),
+             fluidRow( plotOutput("victimGenderPieCharts"))),
+    
+    tabPanel("Age",
+             fluidRow(plotOutput("suspectAgePieCharts")),
+             fluidRow(plotOutput("victimAgePieCharts"))),
+    tabPanel("Race",
+             fluidRow(plotOutput("suspectRacePieCharts")),
+             fluidRow(plotOutput("victimRacePieCharts")))
           )
         )
 

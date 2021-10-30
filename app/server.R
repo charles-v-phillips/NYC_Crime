@@ -82,4 +82,73 @@ function(input, output){
     
     
   })
+  
+  output$suspectGenderPieCharts <- renderPlot({
+    
+    nyc %>% filter(year == input$yearRange[2] , OFNS_DESC %in% input$crime, SUSP_SEX %in% c("M","F")) %>%
+      group_by(year,OFNS_DESC,SUSP_SEX) %>% 
+      summarise(n = n()) %>% mutate(total = sum(n), ratio = n/total) %>% ungroup()%>%
+      ggplot(aes(x = "", y = ratio, fill = SUSP_SEX)) +geom_col(color = "black") + 
+      geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") + 
+      facet_grid(~OFNS_DESC)
+  })
+  
+  output$victimGenderPieCharts <- renderPlot({
+    nyc %>% filter(year == input$yearRange[2] , OFNS_DESC %in% input$crime, VIC_SEX %in% c("M","F")) %>%
+      group_by(year,OFNS_DESC,VIC_SEX) %>% 
+      summarise(n = n()) %>% mutate(total = sum(n), ratio = n/total) %>% ungroup()%>%
+      ggplot(aes(x = "", y = ratio, fill = VIC_SEX)) +geom_col(color = "black") + 
+      geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") + 
+      facet_grid(~OFNS_DESC)
+    
+  })
+  
+  output$suspectAgePieCharts <- renderPlot({
+    
+    nyc %>% 
+      filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, SUSP_AGE_GROUP %in% c("25-44", "18-24","45-64","<18","65+")) %>%   group_by(OFNS_DESC,SUSP_AGE_GROUP) %>%
+      summarise(n = n()) %>%
+      mutate(total = sum(n), ratio = n/total) %>%
+      ggplot(aes(x = "", y = ratio, fill = SUSP_AGE_GROUP)) +geom_col(color = "black") +
+      coord_polar(theta = "y") +
+      facet_grid(~OFNS_DESC)
+    
+  })
+  output$victimAgePieCharts <- renderPlot({
+    nyc %>% 
+      filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, VIC_AGE_GROUP %in% c("25-44", "18-24","45-64","<18","65+")) %>%   group_by(OFNS_DESC,VIC_AGE_GROUP) %>%
+      summarise(n = n()) %>%
+      mutate(total = sum(n), ratio = n/total) %>%
+      ggplot(aes(x = "", y = ratio, fill = VIC_AGE_GROUP)) +geom_col(color = "black") +
+      coord_polar(theta = "y") +
+      facet_grid(~OFNS_DESC)
+    
+  })
+  
+  output$suspectRacePieCharts <- renderPlot({
+    nyc %>%
+      filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, SUSP_RACE %in% c("BLACK", "BLACK HISPANIC", "WHITE HISPANIC", "WHITE", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE" , "AMERICAN INDIAN/ALASKAN NATIVE", "OTHER")) %>% 
+      group_by(OFNS_DESC, SUSP_RACE) %>%
+      summarise(n = n()) %>%
+      mutate(total = sum(n), ratio = n/total) %>%
+      ggplot(aes(x = "", y = ratio, fill = SUSP_RACE)) +geom_col(color = "black") +
+      coord_polar(theta = "y") +
+      facet_grid(~OFNS_DESC)
+  })
+  
+  output$victimRacePieCharts <- renderPlot({
+    nyc %>%
+        filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, VIC_RACE %in% c("BLACK", "BLACK HISPANIC", "WHITE HISPANIC", "WHITE", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE" , "AMERICAN INDIAN/ALASKAN NATIVE", "OTHER")) %>% 
+        group_by(OFNS_DESC, VIC_RACE) %>%
+        summarise(n = n()) %>%
+        mutate(total = sum(n), ratio = n/total) %>%
+        ggplot(aes(x = "", y = ratio, fill = VIC_RACE)) +geom_col(color = "black") +
+        coord_polar(theta = "y") +
+        facet_grid(~OFNS_DESC)
+  })
+  
+  
+  
+  
+  
 }

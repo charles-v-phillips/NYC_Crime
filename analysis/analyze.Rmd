@@ -27,10 +27,90 @@ nyc %>%
 
 ```
 
-
+Here we will look at the number of completed felonies per capita per borough
 ```{r pressure, echo=FALSE}
+nyc %>% filter(LAW_CAT_CD == "FELONY",CRM_ATPT_CPTD_CD == "COMPLETED", !CRM_ATPT_CPTD_CD == "") %>% 
+  group_by(BORO_NM, year) %>% 
+  summarise(n = n()) %>% 
+  left_join(num_people_in_boro, by = "BORO_NM")%>% 
+  mutate(density = n/population)%>%
+  ggplot() + geom_bar(aes(x = year,y = density, fill = BORO_NM),position = 'dodge', stat = 'identity')
+  
 
 
 
+```
+Here we analyze the sex of the victims and suspects for certain crimes
+```{r}
+
+nyc %>% 
+  filter(year %in% c(2012:2013), OFNS_DESC %in% c("RAPE", "ARSON"), SUSP_SEX %in% c("M","F")) %>% 
+  group_by(year,OFNS_DESC,SUSP_SEX) %>% 
+  summarise(n = n()) %>% 
+  mutate(total = sum(n), ratio = n/total) %>% 
+  ungroup()%>%
+  ggplot(aes(x = "", y = ratio, fill = SUSP_SEX)) +geom_col(color = "black") + 
+  geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") + 
+  facet_grid(year~OFNS_DESC)
+  
+
+```
+
+
+Here we analyze ages fo victims and suspects
+```{r}
+
+nyc %>% 
+  filter(year == 2013, OFNS_DESC %in% c("RAPE","ARSON"), SUSP_AGE_GROUP %in% c("25-44", "18-24","45-64","<18","65+")) %>%   group_by(OFNS_DESC,SUSP_AGE_GROUP) %>%
+  summarise(n = n()) %>%
+  mutate(total = sum(n), ratio = n/total) %>%
+  ggplot(aes(x = "", y = ratio, fill = SUSP_AGE_GROUP)) +geom_col(color = "black") +
+  geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") +
+  facet_grid(~OFNS_DESC)
+  
+
+
+```
+
+
+Here we analyze the race of the victims and suspects
+```{r}
+
+
+nyc %>%
+  filter(year == 2013, OFNS_DESC %in% c("RAPE","ARSON"), SUSP_RACE %in% c("BLACK", "BLACK HISPANIC", "WHITE HISPANIC", "WHITE", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE" , "AMERICAN INDIAN/ALASKAN NATIVE", "OTHER")) %>% 
+  group_by(OFNS_DESC, SUSP_AGE_GROUP) %>%
+  summarise(n = n()) %>%
+  mutate(total = sum(n), ratio = n/total) %>%
+  ggplot(aes(x = "", y = ratio, fill = SUSP_RACE)) +geom_col(color = "black") +
+  coord_polar(theta = "y") +
+  facet_grid(~OFNS_DESC)
+
+# nyc %>% 
+#   filter(year == 2013, OFNS_DESC %in% c("RAPE","ARSON"), SUSP_AGE_GROUP %in% c("25-44", "18-24","45-64","<18","65+")) %>%   group_by(OFNS_DESC,SUSP_AGE_GROUP) %>%
+#   summarise(n = n()) %>%
+#   mutate(total = sum(n), ratio = n/total) %>%
+#   ggplot(aes(x = "", y = ratio, fill = SUSP_AGE_GROUP)) +geom_col(color = "black") +
+#   geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") +
+#   facet_grid(~OFNS_DESC)
+
+
+
+
+
+
+```
+
+per capita
+```{r}
+
+nyc%>%
+      filter( BORO_NM == "MANHATTAN",year %in% 2012 : 2012, OFNS_DESC %in%  c("ARSON", "RAPE") ) %>%
+      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+      summarise(num_crime_occurences = n(), population = mean(pop))%>%
+      mutate(total = mean(num_crime_occurences))%>% 
+      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+      ungroup()%>%
+      mutate(n = total/population)
 ```
 
