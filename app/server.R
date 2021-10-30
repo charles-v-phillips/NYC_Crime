@@ -12,17 +12,17 @@ function(input, output){
     all_boro = input$boro == "ALL"
     
     if(raw & all_boro) q =  nyc %>% 
-      filter(year %in% input$yearRange, OFNS_DESC %in% input$crime)%>% 
+      filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime)%>% 
       group_by(ADDR_PCT_CD) %>% 
       summarise(n = n())
     if(raw & !all_boro) q = nyc %>% 
-      filter(year %in% input$yearRange, BORO_NM == input$boro, OFNS_DESC %in% input$crime )%>% 
+      filter(year %in% input$yearRange[1] : input$yearRange[2], BORO_NM == input$boro, OFNS_DESC %in% input$crime )%>% 
       group_by(ADDR_PCT_CD) %>% 
       summarise(n = n())
     
     if(!raw & all_boro) q = 
       nyc%>%
-      filter(year %in% input$yearRange, OFNS_DESC %in%  input$crime ) %>%
+      filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in%  input$crime ) %>%
       group_by(ADDR_PCT_CD,OFNS_DESC) %>%
       summarise(num_crime_occurences = n(), population = mean(pop)) %>%
       mutate(total = sum(num_crime_occurences))%>% 
@@ -32,7 +32,7 @@ function(input, output){
     
     if(!raw & !all_boro) q =
     nyc%>%
-      filter( BORO_NM == input$boro,year %in% input$yearRange, OFNS_DESC %in%  input$crime ) %>%
+      filter( BORO_NM == input$boro,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in%  input$crime ) %>%
       group_by(ADDR_PCT_CD,OFNS_DESC) %>%
       summarise(num_crime_occurences = n(), population = mean(pop)) %>%
       mutate(total = sum(num_crime_occurences))%>% 
@@ -42,19 +42,6 @@ function(input, output){
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-      
-    # nyc %>% filter(year %in% input$yearRange) %>% group_by(ADDR_PCT_CD) %>% 
-    
-    # if(!all_boro) q = nyc%>%filter(input$boro == BORO_NM ) %>%  filter(year %in% input$yearRange) %>% filter(OFNS_DESC %in% input$crime) %>%group_by(ADDR_PCT_CD) %>% summarise(n = n())
-    # if(all_boro) q = nyc %>% filter(year %in% input$yearRange)%>% group_by(ADDR_PCT_CD) %>% summarise(n = n())
     
     
     plot_ly(q) %>% add_trace(
@@ -77,6 +64,22 @@ function(input, output){
       t = 0,
       pad = 4
     ))
+    
+  })
+  
+  output$g2 <- renderPlot({
+    if(!(input$boro == "ALL")) pl = 
+      nyc %>% filter(BORO_NM == input$boro, year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
+      group_by(year, OFNS_DESC) %>% summarise(n = n()) %>% ungroup() %>%
+      ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+    
+    if(input$boro == "ALL") pl = 
+      nyc %>% filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
+      group_by(year, OFNS_DESC) %>% summarise(n = n()) %>% ungroup() %>%
+      ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+    
+    pl
+    
     
   })
 }

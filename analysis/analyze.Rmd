@@ -1,0 +1,36 @@
+---
+title: "AnalysisOfCrime"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Analysis of Type of Crimes
+We take a look at the type of crimes that are reported in each boro. This graph shows the proportion of crime types in each borough
+```{r cars}
+nyc %>%filter (!(BORO_NM == ""))%>% group_by(BORO_NM,LAW_CAT_CD) %>% summarise(num = n())%>%
+  mutate(num_crime_by_boro = sum(num)) %>% summarise(prop = num/num_crime_by_boro, cat = LAW_CAT_CD)%>%
+  ggplot() + geom_bar(aes(x = BORO_NM, y = prop, fill = cat), stat = 'identity', position = 'dodge')
+```
+
+
+Here we look at crime type per capita
+```{r pressure, echo=FALSE}
+num_people_in_boro = nyc %>% group_by(BORO_NM) %>% summarise(population = sum(unique(pop)))
+
+nyc %>% 
+  group_by(BORO_NM) %>% mutate(population = sum(unique(pop))) %>% group_by(BORO_NM, LAW_CAT_CD)%>% summarise(num = n(), pop = mean(population)) %>% mutate(ratio = num/pop)%>%
+  ggplot() + geom_bar(aes(x = BORO_NM, y = ratio,fill = LAW_CAT_CD),stat = 'identity', position = 'dodge')
+
+
+```
+
+
+```{r pressure, echo=FALSE}
+
+
+
+```
+

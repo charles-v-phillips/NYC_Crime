@@ -8,7 +8,7 @@ side_bar  <- dashboardSidebar(
                                           choices=append(unique(nyc$BORO_NM),"ALL")),
                            pickerInput(inputId = 'crime', 
                                           label = 'Crime',
-                                          choices = unique(nyc$OFNS_DESC),
+                                          choices = unique(most_prevelant_crimes),
                                           multiple = T
                                        ),
                                           
@@ -22,9 +22,14 @@ side_bar  <- dashboardSidebar(
 
 
 
-dashboard_body <- dashboardBody(tabsetPanel(tabPanel("Component 2",
-                                         plotlyOutput("p")
-                                       )))
+dashboard_body <- dashboardBody(
+  tabsetPanel(
+    tabPanel(
+      "Component 2",plotlyOutput("p"),
+            fluidRow(column(12,plotOutput("g2")))
+                                             )
+          )
+        )
 
 
   
