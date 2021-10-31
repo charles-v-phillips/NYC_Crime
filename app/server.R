@@ -40,22 +40,7 @@ function(input, output){
         ungroup()%>%
         mutate(n = total/population)
       
-      
-      # nyc%>%
-      # filter( BORO_NM == "MANHATTAN",year %in% 2012 : 2012, OFNS_DESC %in%  c("ARSON", "RAPE") ) %>%
-      # group_by(ADDR_PCT_CD,OFNS_DESC) %>%
-      # summarise(num_crime_occurences = n(), population = mean(pop))%>%
-      # mutate(total = mean(num_crime_occurences))%>% 
-      # pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
-      # ungroup()%>%
-      # mutate(n = total/population)
-    
-    
 
-    
-    
-    
-    
     
     plot_ly(q) %>% add_trace(
       type = "choropleth",
@@ -67,7 +52,8 @@ function(input, output){
       marker=list(line=list(
         width=0)
       )
-    ) %>% layout(geo = list(
+    ) %>% layout(
+      geo = list(
       fitbounds = "locations",
       visible = FALSE
     ), margin = list(
@@ -76,7 +62,7 @@ function(input, output){
       b = 0,
       t = 0,
       pad = 4
-    ))
+    )) 
     
   })
   
@@ -178,7 +164,7 @@ function(input, output){
   output$AlluvialPlot <- renderPlot({
     singleYear = ifelse(input$years[1] == input$years[2],T,F)
     takeLog = input$log
-    
+    if(input$removeYearCol){
     if(singleYear & !takeLog){
       print("HERE")
       who_on_who = 
@@ -251,6 +237,84 @@ function(input, output){
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
       return(av)
+    }
+    }
+    
+    if(!input$removeYearCol){
+      if(singleYear & !takeLog){
+        print("HERE")
+        who_on_who = 
+          nyc  %>% 
+          group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
+          filter(OFNS_DESC %in% input$crimesToLookAt , 
+                 SUSP_RACE %in% input$suspect, 
+                 VIC_RACE %in% input$victim, year == input$years[1]) %>%
+          summarise(n = n())
+        
+        av = ggplot(data = who_on_who,
+                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
+          scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+          geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+          theme_minimal()
+        return(av)
+      }
+      if(singleYear & takeLog){
+        print("HEREEEEEEEEEEEE")
+        who_on_who = 
+          nyc  %>% 
+          group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
+          filter(OFNS_DESC %in% input$crimesToLookAt , 
+                 SUSP_RACE %in% input$suspect, 
+                 VIC_RACE %in% input$victim, year == input$years[1]) %>%
+          summarise(n = n())
+        
+        av = ggplot(data = who_on_who,
+                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = log(n))) + 
+          scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+          geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+          theme_minimal()
+        
+        return(av)
+        
+      }
+      if(!singleYear & !takeLog){
+        who_on_who = 
+          nyc  %>% 
+          group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
+          filter(OFNS_DESC %in% input$crimesToLookAt , 
+                 SUSP_RACE %in% input$suspect, 
+                 VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
+          summarise(n = n())
+        
+        av = ggplot(data = who_on_who,
+                    aes(axis1 = SUSP_RACE,axis2 =  VIC_RACE,y = n)) + 
+          scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+          geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+          theme_minimal()
+        return(av)
+        
+      }
+      if(!singleYear & takeLog){
+        who_on_who = 
+          nyc  %>% 
+          group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
+          filter(OFNS_DESC %in% input$crimesToLookAt , 
+                 SUSP_RACE %in% input$suspect, 
+                 VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
+          summarise(n = n())
+        
+        av = ggplot(data = who_on_who,
+                    aes(axis1 = SUSP_RACE,axis2 = VIC_RACE,y = log(n))) + 
+          scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+          geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+          theme_minimal()
+        return(av)
+      }
+      
     }
     
   })

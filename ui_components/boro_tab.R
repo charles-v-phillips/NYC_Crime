@@ -62,7 +62,7 @@ dashboard_body <- dashboardBody(
                                    value = c(2017,2019),
                                    step = 1)),
              column(1,checkboxInput("log", label = "Log", value = F)),
-             column(1,checkboxInput("allYears", label = "ALl Years",value = F))),
+             column(1,checkboxInput("removeYearCol", label = "Years",value = F))),
              
              fluidRow(plotOutput("AlluvialPlot")))
           )
