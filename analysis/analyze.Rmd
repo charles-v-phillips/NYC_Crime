@@ -101,7 +101,7 @@ nyc %>%
 
 ```
 
-per capita
+per capita.. convince myself that this is correct
 ```{r}
 
 nyc%>%
@@ -113,4 +113,30 @@ nyc%>%
       ungroup()%>%
       mutate(n = total/population)
 ```
+
+
+Some really spicy shit
+
+```{r}
+
+library(ggalluvial)
+crimes = c("RAPE", "OFFENSES RELATED TO CHILDREN", "ROBBERY","CRIMINAL TRESPASS")
+races = c("BLACK", "WHITE HISPANIC", "WHITE","ASIAN / PACIFIC ISLANDER")
+what_on_what = nyc  %>% group_by(SUSP_RACE , VIC_RACE, OFNS_DESC) %>% filter(OFNS_DESC %in% crimes, SUSP_RACE %in% races, VIC_RACE %in% races, year %in% 2010:2020, BORO_NM =="QUEENS") %>%summarise(n = n())
+
+
+ggplot(data = what_on_what,
+       aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
+         scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+  theme_minimal()
+       
+
+```
+
+
+
+
+
 

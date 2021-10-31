@@ -18,4 +18,4 @@ brooklyn_precincts <- fromJSON(file = '../geo_jsons/brooklyn_precincts.json')
 # nyc <- read.csv("../data/nypd_complaints.csv")
 
 
-most_prevelant_crimes = nyc %>% group_by(OFNS_DESC) %>% summarise(n = n()) %>% arrange(-n)
+# most_prevelant_crimes = (nyc %>% group_by(OFNS_DESC) %>% summarise(n = n()) %>% arrange(-n))$OFNS_DESC

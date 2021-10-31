@@ -31,14 +31,27 @@ function(input, output){
       mutate(n = total/population)
     
     if(!raw & !all_boro) q =
-    nyc%>%
-      filter( BORO_NM == input$boro,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in%  input$crime ) %>%
-      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
-      summarise(num_crime_occurences = n(), population = mean(pop)) %>%
-      mutate(total = sum(num_crime_occurences))%>% 
-      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
-      ungroup()%>%
-      mutate(n = total/population)
+      nyc%>%
+        filter( BORO_NM == input$boro,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in%  input$crime ) %>%
+        group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+        summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+        mutate(total = mean(num_crime_occurences))%>%
+        pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+        ungroup()%>%
+        mutate(n = total/population)
+      
+      
+      # nyc%>%
+      # filter( BORO_NM == "MANHATTAN",year %in% 2012 : 2012, OFNS_DESC %in%  c("ARSON", "RAPE") ) %>%
+      # group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+      # summarise(num_crime_occurences = n(), population = mean(pop))%>%
+      # mutate(total = mean(num_crime_occurences))%>% 
+      # pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+      # ungroup()%>%
+      # mutate(n = total/population)
+    
+    
+
     
     
     
@@ -145,6 +158,19 @@ function(input, output){
         ggplot(aes(x = "", y = ratio, fill = VIC_RACE)) +geom_col(color = "black") +
         coord_polar(theta = "y") +
         facet_grid(~OFNS_DESC)
+  })
+  
+  output$crimeByRaceAlluvial <- renderPlot({
+    
+    wh = nyc %>% filter(OFNS_DESC %in% input$crimesToLookAt, SUSP_RACE %in% input$suspect, VIC_RACE %in% input$suspect) %>%
+      group_by(SUSP_RACE,VIC_RACE,OFNS_DESC) %>% summarise(n = n())
+    
+    ggplot(data = wh,
+           aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
+      scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+      geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+      geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+      theme_minimal()
   })
   
   

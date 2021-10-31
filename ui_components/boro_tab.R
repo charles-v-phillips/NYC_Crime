@@ -8,7 +8,7 @@ side_bar  <- dashboardSidebar(
                                           choices=append(unique(nyc$BORO_NM),"ALL")),
                            pickerInput(inputId = 'crime', 
                                           label = 'Crime',
-                                          choices = unique(most_prevelant_crimes),
+                                          choices = unique(nyc$OFNS_DESC),
                                           multiple = T
                                        ),
                                           
@@ -37,7 +37,22 @@ dashboard_body <- dashboardBody(
              fluidRow(plotOutput("victimAgePieCharts"))),
     tabPanel("Race",
              fluidRow(plotOutput("suspectRacePieCharts")),
-             fluidRow(plotOutput("victimRacePieCharts")))
+             fluidRow(plotOutput("victimRacePieCharts"))),
+    tabPanel("Something a little spicy",
+             fluidRow(
+               pickerInput(
+                inputId = "suspect",
+                label = "Suspect Race",
+                choices = unique(nyc$SUSP_RACE),
+                multiple = T
+             ),
+                pickerInput(
+                  inputId = "crimesToLookAt",
+                  label = "Crimes",
+                  choices = unique(nyc$OFNS_DESC),
+                  multiple = T
+                )),
+             fluidRow(plotOutput("crimeByRaceAlluvial")))
           )
         )
 
