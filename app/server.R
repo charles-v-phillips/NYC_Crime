@@ -49,6 +49,7 @@ function(input, output){
       locations = unique(q$ADDR_PCT_CD),
       z = ~n,
       colors = clr,
+      # text = Precinct,
       featureidkey="properties.Precinct",
       marker=list(line=list(
         width=0)
