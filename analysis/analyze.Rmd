@@ -151,4 +151,24 @@ ggplot(data = what_on_what2,
   theme_minimal()
 
 ```
+organize precincts by most safe
+
+```{r}
+
+nyc %>% filter(BORO_NM %in% c("MANHATTAN", "QUEENS"), year %in% 2010 : 2020, OFNS_DESC %in% c("FELONY ASSAULT", "ROBBERY", "RAPE")) %>% 
+          group_by(BORO_NM, year, OFNS_DESC)
+
+%>% ungroup() %>%
+          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+
+
+
+
+
+
+  
+
+
+
+```
 

@@ -1,6 +1,6 @@
 side_bar  <- dashboardSidebar(
-  radioButtons("radio", label = h3("Radio buttons"),
-               choices = list("Raw" = T, "Density" = F), 
+  radioButtons("radio", label = h3("Data Mode"),
+               choices = list("Frequency" = T, "Per Capita" = F), 
                selected = T),
   
                            selectizeInput(inputId='boro',
@@ -25,20 +25,20 @@ side_bar  <- dashboardSidebar(
 dashboard_body <- dashboardBody(
   tabsetPanel(
     tabPanel(
-      "Component 2",plotlyOutput("p"),
-            fluidRow(column(12,plotOutput("g2")))
+      "Map",fluidRow(column(6,plotlyOutput("p")),column(6,plotOutput("precinctOrder"))),
+            fluidRow(plotOutput("g2"))
                                              ),
-    tabPanel("Gender",
+    tabPanel("Gender Breakdown",
              fluidRow(plotOutput("suspectGenderPieCharts")),
              fluidRow( plotOutput("victimGenderPieCharts"))),
     
-    tabPanel("Age",
+    tabPanel("Age Breakdown",
              fluidRow(plotOutput("suspectAgePieCharts")),
              fluidRow(plotOutput("victimAgePieCharts"))),
-    tabPanel("Race",
+    tabPanel("Race Breakdown",
              fluidRow(plotOutput("suspectRacePieCharts")),
              fluidRow(plotOutput("victimRacePieCharts"))),
-    tabPanel("Something a little spicy",
+    tabPanel("Alluvial Plot",
              fluidRow(column(2,
                pickerInput(
                 inputId = "suspect",

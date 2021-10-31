@@ -7,9 +7,10 @@ function(input, output){
     if(input$boro == "BROOKLYN") precinct = brooklyn_precincts
     if(input$boro == "ALL") precinct = precincts
     
-    
+    clr = "Purples"
     raw = ifelse(input$radio == T,T,F)
     all_boro = input$boro == "ALL"
+    colorBarTitle = ifelse(raw,"Frequency","Crimes per Capita")
     
     if(raw & all_boro) q =  nyc %>% 
       filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime)%>% 
@@ -25,7 +26,7 @@ function(input, output){
       filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in%  input$crime ) %>%
       group_by(ADDR_PCT_CD,OFNS_DESC) %>%
       summarise(num_crime_occurences = n(), population = mean(pop)) %>%
-      mutate(total = sum(num_crime_occurences))%>% 
+      mutate(total = mean(num_crime_occurences))%>% 
       pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
       ungroup()%>%
       mutate(n = total/population)
@@ -47,7 +48,7 @@ function(input, output){
       geojson = precinct,
       locations = unique(q$ADDR_PCT_CD),
       z = ~n,
-      colors = "Purples",
+      colors = clr,
       featureidkey="properties.Precinct",
       marker=list(line=list(
         width=0)
@@ -62,11 +63,15 @@ function(input, output){
       b = 0,
       t = 0,
       pad = 4
-    )) 
+    )) %>%colorbar(title = colorBarTitle)
     
   })
   
   output$g2 <- renderPlot({
+    
+    raw = ifelse(input$radio == T,T,F)
+    
+    if(raw){
     if(!(input$boro == "ALL")) pl = 
       nyc %>% filter(BORO_NM == input$boro, year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
       group_by(year, OFNS_DESC) %>% summarise(n = n()) %>% ungroup() %>%
@@ -76,11 +81,58 @@ function(input, output){
       nyc %>% filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
       group_by(year, OFNS_DESC) %>% summarise(n = n()) %>% ungroup() %>%
       ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+    }
     
-    pl
+    if(!raw){
+      if(!(input$boro == "ALL")) pl = 
+          nyc %>% filter(BORO_NM == input$boro, year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
+          group_by(year, OFNS_DESC) %>% summarise(n = n()/(input$yearRange[2] - input$yearRange[1])) %>% ungroup() %>%
+          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+      
+      if(input$boro == "ALL") pl = 
+          nyc %>% filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
+          group_by(year, OFNS_DESC) %>% summarise(n = n()/(input$yearRange[2] - input$yearRange[1])) %>% ungroup() %>%
+          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+      
+    }
+    
+    pl + ggtitle("Crime by Year")
     
     
   })
+  
+  output$precinctOrder <- renderPlot({
+    
+    raw = ifelse(input$radio == T,T,F)
+    ylabel = ifelse(raw,"Frequency","Crimes per Capita")
+    if(raw){
+    g = nyc %>%
+      filter(BORO_NM == input$boro ,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
+      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+      summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+      mutate(total = mean(num_crime_occurences))%>%
+      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+      ungroup()%>%
+      mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
+      ylab(ylabel) + ggtitle("Crime by Precinct")
+    return(g)
+    }
+    
+    if(!raw){
+      
+      g = nyc %>%
+        filter(BORO_NM == input$boro ,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
+        group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+        summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+        mutate(total = mean(num_crime_occurences))%>%
+        pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+        ungroup()%>%
+        mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -n), y = n), stat = 'identity') + xlab("Precinct") + 
+        ylab(ylabel) + ggtitle("Crime by Precinct")
+      return(g)
+    }
+  })
+  
   
   output$suspectGenderPieCharts <- renderPlot({
     
