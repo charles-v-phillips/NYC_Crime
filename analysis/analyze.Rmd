@@ -139,4 +139,16 @@ ggplot(data = what_on_what,
 
 
 
+```{r}
+what_on_what2 = nyc  %>% group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% filter(OFNS_DESC %in% crimes, SUSP_RACE %in% races, VIC_RACE %in% races, year %in% 2018:2020, BORO_NM =="QUEENS") %>%summarise(n = n())
+what_on_what2
+
+ggplot(data = what_on_what2,
+       aes(axis1 = SUSP_RACE, axis2 = year, axis3 = VIC_RACE,y = n)) + 
+         scale_x_discrete(limits = c("Suspect Race","Year", "Victim Race")) + 
+         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
+          geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
+  theme_minimal()
+
+```
 

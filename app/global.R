@@ -5,6 +5,7 @@ library(plotly)
 library(rjson)
 library(shinyWidgets)
 library(tidyverse)
+library(ggalluvial)
 source('../ui_components/boro_tab.R')
 
 precincts <- fromJSON(file='../geo_jsons/precincts-2.json' )

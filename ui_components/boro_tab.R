@@ -39,22 +39,35 @@ dashboard_body <- dashboardBody(
              fluidRow(plotOutput("suspectRacePieCharts")),
              fluidRow(plotOutput("victimRacePieCharts"))),
     tabPanel("Something a little spicy",
-             fluidRow(
+             fluidRow(column(2,
                pickerInput(
                 inputId = "suspect",
                 label = "Suspect Race",
                 choices = unique(nyc$SUSP_RACE),
                 multiple = T
-             ),
-                pickerInput(
+             )),
+                column(2,pickerInput(
                   inputId = "crimesToLookAt",
                   label = "Crimes",
-                  choices = unique(nyc$OFNS_DESC),
+                  choices = unique((nyc %>% group_by(OFNS_DESC) %>% summarise(n = n()) %>%arrange(-n))$OFNS_DESC),
                   multiple = T
                 )),
-             fluidRow(plotOutput("crimeByRaceAlluvial")))
+                column(2,pickerInput("victim",
+                                     label = "Victim Race",
+                                     choices = unique(nyc$SUSP_RACE),
+                                     multiple = T)),
+              column(2,sliderInput(inputId = "years", 
+                                   label = "Year",
+                                   min = 2006, max = 2020,
+                                   value = c(2017,2019),
+                                   step = 1)),
+             column(1,checkboxInput("log", label = "Log", value = F)),
+             column(1,checkboxInput("allYears", label = "ALl Years",value = F))),
+             
+             fluidRow(plotOutput("AlluvialPlot")))
           )
         )
+
 
 
   
