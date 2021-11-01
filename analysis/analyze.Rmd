@@ -155,20 +155,54 @@ organize precincts by most safe
 
 ```{r}
 
-nyc %>% filter(BORO_NM %in% c("MANHATTAN", "QUEENS"), year %in% 2010 : 2020, OFNS_DESC %in% c("FELONY ASSAULT", "ROBBERY", "RAPE")) %>% 
-          group_by(BORO_NM, year, OFNS_DESC)
-
-%>% ungroup() %>%
-          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
 
 
 
 
+```
+
+fix per capita plot g2 for specific boro
+
+```{r}
+
+#SPECIFIC BORO
+nyc %>% filter(BORO_NM == 'MANHATTAN', year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY")) %>% 
+  group_by(year,OFNS_DESC) %>% summarise(n= n(), pop = mean(pop)) %>% mutate(density = n/sum(unique(pop)))
 
 
-  
+
+#ALL BORO
+nyc %>% filter(year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY")) %>% 
+  group_by(year,BORO_NM,OFNS_DESC) %>% 
+  summarise( n = n(),pop = mean(pop))%>%
+  summarise(n = sum(n), pop = mean(pop)) %>% 
+  summarise(n = sum(n), pop = sum(pop))%>% 
+  mutate(density = n/sum(unique(pop)))
+
+nyc %>% filter(year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY")) %>% 
+  group_by(year,BORO_NM,ADDR_PCT_CD, OFNS_DESC) %>%
+  summarise(num_of_each_crimes_in_precinct = n(), precinct_population = mean(pop))%>%
+  summarise(num_crimes_in_each_precinct = sum(num_of_each_crimes_in_precinct), precinct_population = mean(precinct_population))%>%
+  summarise(num_crimes_in_each_boro = sum(num_crimes_in_each_precinct), boro_population = sum(precinct_population)) %>% summarise(density = sum(num_crimes_in_each_boro)/sum(boro_population))
 
 
 
+
+nyc %>% filter(year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY")) %>% 
+  group_by(OFNS_DESC, BORO_NM,ADDR_PCT_CD) %>% 
+  summarise(num_of_each_crimes_in_precinct = n(), precinct_population = mean(pop)) %>%
+  summarise(num_crimes_in_each_precinct = sum(num_of_each_crimes_in_precinct), precinct_population = mean(precinct_population))
+%>%
+  summarise(num_crimes_in_each_boro = sum(num_crimes_in_each_precinct),boro_population = sum(precinct_population))
+
+
+
+
+nyc %>% filter(year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY")) %>% 
+  group_by(year, OFNS_DESC, BORO_NM) %>% summarise(num_crimes_in_boro = n(), boro_pop = sum(unique(pop))) %>% 
+  summarise(total = sum(num_crimes_in_boro), pop = sum(boro_pop)) %>% mutate(density = total/pop)
+
+
+scale_fill_gradient(low = "yellow", high = "red", na.value = NA)
 ```
 

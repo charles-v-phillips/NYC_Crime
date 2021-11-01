@@ -1,4 +1,5 @@
 function(input, output){
+  #Code to generate chloropleth
   output$p <- renderPlotly({
     if(input$boro == "MANHATTAN") precinct = manhattan_precincts
     if(input$boro == "STATEN ISLAND") precinct =  staten_island_precincts
@@ -7,7 +8,8 @@ function(input, output){
     if(input$boro == "BROOKLYN") precinct = brooklyn_precincts
     if(input$boro == "ALL") precinct = precincts
     
-    clr = "Purples"
+    clr = "RdYlGn"
+   
     raw = ifelse(input$radio == T,T,F)
     all_boro = input$boro == "ALL"
     colorBarTitle = ifelse(raw,"Frequency","Crimes per Capita")
@@ -48,7 +50,7 @@ function(input, output){
       geojson = precinct,
       locations = unique(q$ADDR_PCT_CD),
       z = ~n,
-      colors = clr,
+      colors = "YlOrRd",
       # text = Precinct,
       featureidkey="properties.Precinct",
       marker=list(line=list(
@@ -66,8 +68,11 @@ function(input, output){
       pad = 4
     )) %>%colorbar(title = colorBarTitle)
     
+    
+    
   })
   
+  #Code to generate crime numbers over a year range
   output$g2 <- renderPlot({
     
     raw = ifelse(input$radio == T,T,F)
@@ -86,14 +91,15 @@ function(input, output){
     
     if(!raw){
       if(!(input$boro == "ALL")) pl = 
-          nyc %>% filter(BORO_NM == input$boro, year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
-          group_by(year, OFNS_DESC) %>% summarise(n = n()/(input$yearRange[2] - input$yearRange[1])) %>% ungroup() %>%
-          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+          nyc %>% filter(BORO_NM == input$boro, year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC  %in% input$crime) %>% 
+          group_by(year,OFNS_DESC) %>% summarise(n= n(), pop = mean(pop)) %>% mutate(density = n/sum(unique(pop)))%>%
+          ggplot() + geom_bar(aes(x = year,y = density, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
       
       if(input$boro == "ALL") pl = 
-          nyc %>% filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>% 
-          group_by(year, OFNS_DESC) %>% summarise(n = n()/(input$yearRange[2] - input$yearRange[1])) %>% ungroup() %>%
-          ggplot() + geom_bar(aes(x = year,y = n, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
+          nyc %>% filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC  %in% input$crime) %>% 
+          group_by(year, OFNS_DESC, BORO_NM) %>% summarise(num_crimes_in_boro = n(), boro_pop = sum(unique(pop))) %>% 
+          summarise(total = sum(num_crimes_in_boro), pop = sum(boro_pop)) %>% mutate(density = total/pop) %>%
+          ggplot() + geom_bar(aes(x = year,y = density, fill = OFNS_DESC),stat = 'identity',position = 'dodge')
       
     }
     
@@ -102,20 +108,32 @@ function(input, output){
     
   })
   
+  #code to generate histogram of safest precincts
   output$precinctOrder <- renderPlot({
     
     raw = ifelse(input$radio == T,T,F)
+    all_boro = input$boro == "ALL"
     ylabel = ifelse(raw,"Frequency","Crimes per Capita")
+    
+    if(!all_boro){
     if(raw){
-    g = nyc %>%
-      filter(BORO_NM == input$boro ,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
-      group_by(ADDR_PCT_CD,OFNS_DESC) %>%
-      summarise(num_crime_occurences = n(), population = mean(pop)) %>%
-      mutate(total = mean(num_crime_occurences))%>%
-      pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
-      ungroup()%>%
-      mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
-      ylab(ylabel) + ggtitle("Crime by Precinct")
+      g = nyc %>% 
+        filter(year %in% input$yearRange[1] : input$yearRange[2], BORO_NM == input$boro, OFNS_DESC %in% input$crime )%>% 
+        group_by(ADDR_PCT_CD) %>% 
+        summarise(n = n())%>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -n), y = n), stat = 'identity') + xlab("Precinct") + 
+        ylab(ylabel) + ggtitle("Crime by Precinct")
+      
+      
+      
+    # g = nyc %>%
+    #   filter(BORO_NM == input$boro ,year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
+    #   group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+    #   summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+    #   mutate(total = mean(num_crime_occurences))%>%
+    #   pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+    #   ungroup()%>%
+    #   mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
+    #   ylab(ylabel) + ggtitle("Crime by Precinct")
     return(g)
     }
     
@@ -132,9 +150,25 @@ function(input, output){
         ylab(ylabel) + ggtitle("Crime by Precinct")
       return(g)
     }
+    }
+    if(all_boro){
+      if(raw){
+        g = nyc %>%
+          filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
+          group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+          summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+          mutate(total = mean(num_crime_occurences))%>%
+          pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+          ungroup()%>%
+          mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
+          ylab(ylabel) + ggtitle("Crime by Precinct") + coord_flip()
+        return(g)
+        
+      }
+    }
   })
   
-  
+  #code to generate suspect and victim piecharts for gender
   output$suspectGenderPieCharts <- renderPlot({
     
     nyc %>% filter(year == input$yearRange[2] , OFNS_DESC %in% input$crime, SUSP_SEX %in% c("M","F")) %>%
@@ -144,7 +178,6 @@ function(input, output){
       geom_text(aes(label = round(ratio*100,2)),position = position_stack(vjust = 0.5)) + coord_polar(theta = "y") + 
       facet_grid(~OFNS_DESC)
   })
-  
   output$victimGenderPieCharts <- renderPlot({
     nyc %>% filter(year == input$yearRange[2] , OFNS_DESC %in% input$crime, VIC_SEX %in% c("M","F")) %>%
       group_by(year,OFNS_DESC,VIC_SEX) %>% 
@@ -155,6 +188,8 @@ function(input, output){
     
   })
   
+  
+  # code to generate  suspect and victim piecharts for age
   output$suspectAgePieCharts <- renderPlot({
     
     nyc %>% 
@@ -177,6 +212,7 @@ function(input, output){
     
   })
   
+  # code to generate suspect and victim pie cahrts for gender
   output$suspectRacePieCharts <- renderPlot({
     nyc %>%
       filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, SUSP_RACE %in% c("BLACK", "BLACK HISPANIC", "WHITE HISPANIC", "WHITE", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE" , "AMERICAN INDIAN/ALASKAN NATIVE", "OTHER")) %>% 
@@ -187,7 +223,6 @@ function(input, output){
       coord_polar(theta = "y") +
       facet_grid(~OFNS_DESC)
   })
-  
   output$victimRacePieCharts <- renderPlot({
     nyc %>%
         filter(year == input$yearRange[2], OFNS_DESC %in% input$crime, VIC_RACE %in% c("BLACK", "BLACK HISPANIC", "WHITE HISPANIC", "WHITE", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE" , "AMERICAN INDIAN/ALASKAN NATIVE", "OTHER")) %>% 
@@ -199,28 +234,25 @@ function(input, output){
         facet_grid(~OFNS_DESC)
   })
   
-  output$crimeByRaceAlluvial <- renderPlot({
-    
-    wh = nyc %>% filter(OFNS_DESC %in% input$crimesToLookAt, SUSP_RACE %in% input$suspect, VIC_RACE %in% input$suspect) %>%
-      group_by(SUSP_RACE,VIC_RACE,OFNS_DESC) %>% summarise(n = n())
-    
-    ggplot(data = wh,
-           aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
-      scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
-      geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
-      geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
-      theme_minimal()
-  })
   
   
   
   output$AlluvialPlot <- renderPlot({
+    
+    if (input$go[1] %% 2 == 0)
+      return()
     singleYear = ifelse(input$years[1] == input$years[2],T,F)
     takeLog = input$log
+    
+    #DEPENDANCY ON GO BUTTON
+    input$go
+    
     if(input$removeYearCol){
     if(singleYear & !takeLog){
-      print("HERE")
-      who_on_who = 
+    
+      
+      # who_on_who = 
+      
       nyc  %>% 
       group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
       filter(OFNS_DESC %in% input$crimesToLookAt , 
@@ -234,7 +266,7 @@ function(input, output){
       geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
       geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
       theme_minimal()
-    return(av)
+    
     }
     if(singleYear & takeLog){
       print("HEREEEEEEEEEEEE")
@@ -253,7 +285,6 @@ function(input, output){
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
       
-      return(av)
       
     }
     if(!singleYear & !takeLog){
@@ -271,7 +302,7 @@ function(input, output){
         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
-      return(av)
+
       
     }
     if(!singleYear & takeLog){
@@ -289,7 +320,7 @@ function(input, output){
         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
-      return(av)
+      
     }
     }
     
@@ -310,7 +341,6 @@ function(input, output){
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
           theme_minimal()
-        return(av)
       }
       if(singleYear & takeLog){
         print("HEREEEEEEEEEEEE")
@@ -329,7 +359,6 @@ function(input, output){
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
           theme_minimal()
         
-        return(av)
         
       }
       if(!singleYear & !takeLog){
@@ -347,7 +376,6 @@ function(input, output){
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
           theme_minimal()
-        return(av)
         
       }
       if(!singleYear & takeLog){
@@ -365,12 +393,21 @@ function(input, output){
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
           theme_minimal()
-        return(av)
       }
       
     }
     
+    print(input$go[1])
+    
+    
+    
+    
+    return(av)
+    
   })
+  
+  
+ 
   
 }
 
