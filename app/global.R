@@ -7,6 +7,8 @@ library(shinyWidgets)
 library(tidyverse)
 library(ggalluvial)
 library(RColorBrewer)
+
+# nyc <- read.csv('../data/clean_v6.csv')
 source('../ui_components/boro_tab.R')
 
 precincts <- fromJSON(file='../geo_jsons/precincts-2.json' )
@@ -18,5 +20,5 @@ brooklyn_precincts <- fromJSON(file = '../geo_jsons/brooklyn_precincts.json')
 
 
 
-nyc <- read.csv('../data/clean_v6.csv')
+
 

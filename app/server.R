@@ -153,14 +153,25 @@ function(input, output){
     }
     if(all_boro){
       if(raw){
+        # g = nyc %>%
+        #   filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
+        #   group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+        #   summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+        #   mutate(total = mean(num_crime_occurences))%>%
+        #   pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+        #   ungroup()%>%
+        #   mutate(n = total/population) %>% 
+          g = nyc %>%filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime ) %>% 
+            group_by(ADDR_PCT_CD) %>% summarise(n = n()) %>%
+            ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -n), y = n), stat = 'identity') + xlab("Precinct") + 
+          ylab(ylabel) + ggtitle("Crime by Precinct") + coord_flip()
+        return(g)
+        
+      }
+      if(!raw){
         g = nyc %>%
-          filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime) %>%
-          group_by(ADDR_PCT_CD,OFNS_DESC) %>%
-          summarise(num_crime_occurences = n(), population = mean(pop)) %>%
-          mutate(total = mean(num_crime_occurences))%>%
-          pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
-          ungroup()%>%
-          mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
+          filter(year %in% input$yearRange[1] : input$yearRange[2], OFNS_DESC %in% input$crime ) %>% 
+          group_by(ADDR_PCT_CD) %>% summarise(n = n(), dens = n/pop) %>%ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -dens), y = dens), stat = 'identity') + xlab("Precinct") + 
           ylab(ylabel) + ggtitle("Crime by Precinct") + coord_flip()
         return(g)
         
@@ -251,17 +262,16 @@ function(input, output){
     if(singleYear & !takeLog){
     
       
-      # who_on_who = 
-      
+      who_on_who = 
       nyc  %>% 
       group_by(SUSP_RACE , VIC_RACE, OFNS_DESC,year) %>% 
       filter(OFNS_DESC %in% input$crimesToLookAt , 
              SUSP_RACE %in% input$suspect, 
              VIC_RACE %in% input$victim, year == input$years[1]) %>%
-      summarise(n = n())
+      summarise(Count = n())
     
     av = ggplot(data = who_on_who,
-           aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
+           aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = Count)) + 
       scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
       geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
       geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
@@ -276,10 +286,10 @@ function(input, output){
         filter(OFNS_DESC %in% input$crimesToLookAt , 
                SUSP_RACE %in% input$suspect, 
                VIC_RACE %in% input$victim, year == input$years[1]) %>%
-        summarise(n = n())
+        summarise(Count = n())
       
       av = ggplot(data = who_on_who,
-             aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = log(n))) + 
+             aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = log(Count))) + 
         scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
@@ -294,11 +304,11 @@ function(input, output){
         filter(OFNS_DESC %in% input$crimesToLookAt , 
                SUSP_RACE %in% input$suspect, 
                VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
-        summarise(n = n())
+        summarise(Count = n())
       
       av = ggplot(data = who_on_who,
-                  aes(axis1 = SUSP_RACE,axis2 = year, axis3 = VIC_RACE,y = n)) + 
-        scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+                  aes(axis1 = SUSP_RACE,axis2 = year, axis3 = VIC_RACE,y = Count)) + 
+        scale_x_discrete(limits = c("Suspect Race","Year", "Victim Race")) + 
         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
@@ -312,11 +322,11 @@ function(input, output){
         filter(OFNS_DESC %in% input$crimesToLookAt , 
                SUSP_RACE %in% input$suspect, 
                VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
-        summarise(n = n())
+        summarise(Count = n())
       
       av = ggplot(data = who_on_who,
-                  aes(axis1 = SUSP_RACE,axis2 = year, axis3 = VIC_RACE,y = log(n))) + 
-        scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
+                  aes(axis1 = SUSP_RACE,axis2 = year, axis3 = VIC_RACE,y = log(Count))) + 
+        scale_x_discrete(limits = c("Suspect Race","Year" ,"Victim Race")) + 
         geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
         geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
         theme_minimal()
@@ -333,10 +343,10 @@ function(input, output){
           filter(OFNS_DESC %in% input$crimesToLookAt , 
                  SUSP_RACE %in% input$suspect, 
                  VIC_RACE %in% input$victim, year == input$years[1]) %>%
-          summarise(n = n())
+          summarise(Count = n())
         
         av = ggplot(data = who_on_who,
-                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = n)) + 
+                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = Count)) + 
           scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
@@ -350,10 +360,10 @@ function(input, output){
           filter(OFNS_DESC %in% input$crimesToLookAt , 
                  SUSP_RACE %in% input$suspect, 
                  VIC_RACE %in% input$victim, year == input$years[1]) %>%
-          summarise(n = n())
+          summarise(Count = n())
         
         av = ggplot(data = who_on_who,
-                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = log(n))) + 
+                    aes(axis1 = SUSP_RACE, axis2 = VIC_RACE,y = log(Count))) + 
           scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
@@ -368,10 +378,10 @@ function(input, output){
           filter(OFNS_DESC %in% input$crimesToLookAt , 
                  SUSP_RACE %in% input$suspect, 
                  VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
-          summarise(n = n())
+          summarise(Count = n())
         
         av = ggplot(data = who_on_who,
-                    aes(axis1 = SUSP_RACE,axis2 =  VIC_RACE,y = n)) + 
+                    aes(axis1 = SUSP_RACE,axis2 =  VIC_RACE,y = Count)) + 
           scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 
@@ -385,10 +395,10 @@ function(input, output){
           filter(OFNS_DESC %in% input$crimesToLookAt , 
                  SUSP_RACE %in% input$suspect, 
                  VIC_RACE %in% input$victim, year %in% input$years[1]:input$years[2]) %>%
-          summarise(n = n())
+          summarise(Count = n())
         
         av = ggplot(data = who_on_who,
-                    aes(axis1 = SUSP_RACE,axis2 = VIC_RACE,y = log(n))) + 
+                    aes(axis1 = SUSP_RACE,axis2 = VIC_RACE,y = log(Count))) + 
           scale_x_discrete(limits = c("Suspect Race", "Victim Race")) + 
           geom_alluvium(aes(fill = OFNS_DESC)) + geom_stratum() + 
           geom_text(stat = "stratum", aes(label = after_stat(stratum))) + 

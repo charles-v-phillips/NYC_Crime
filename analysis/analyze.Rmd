@@ -203,6 +203,32 @@ nyc %>% filter(year %in% 2012:2015, OFNS_DESC  %in% c("ARSON", "RAPE", "ROBBERY"
   summarise(total = sum(num_crimes_in_boro), pop = sum(boro_pop)) %>% mutate(density = total/pop)
 
 
-scale_fill_gradient(low = "yellow", high = "red", na.value = NA)
+nyc %>% filter(SUSP_SEX %in% c("M","F")) %>%  group_by(SUSP_SEX) %>% summarise(n = n())%>% ggplot() + geom_bar(aes(x = SUSP_SEX, y = n),stat = 'identity', fill = "purple") + ylab("Frequency") + xlab("Sex of Suspect")
+
+nyc %>% filter(VIC_SEX %in% c("M","F") ) %>%  group_by(VIC_SEX) %>% summarise(n = n())%>% ggplot() + geom_bar(aes(x = VIC_SEX, y = n),stat = 'identity', fill = "blue") + ylab("Frequency") + xlab("Sex of Victim")
+
+
+nyc %>%filter(VIC_AGE_GROUP %in% c("<18" ,"18-24","25-44","45-64","65+") & SUSP_AGE_GROUP %in% c("<18" ,"18-24","25-44","45-64","65+")) %>% group_by(SUSP_AGE_GROUP) %>% summarise(n = n()) %>% ggplot() + geom_bar(aes(x = SUSP_AGE_GROUP, y = n), stat = 'identity') + ylab("Frequency") + xlab("Age Group of Suspects")
+
+
+nyc %>% filter(VIC_RACE %in% c("WHITE HISPANIC", "WHITE", "BLACK HISPANIC", "BLACK", "ASIAN / PACIFIC ISLANDER", "AMERICAN INDIAN/ALASKAN NATIVE")) %>% group_by(VIC_RACE) %>% summarise(n = n()) %>% ggplot() + geom_bar(aes(x = VIC_RACE, y = n), stat = 'identity', fill = "Purple") + ylab("Frequency") + xlab("Race of Victime") + coord_flip()
+
+
+```
+```{r}
+nyc %>%
+          filter(year %in% 2012:2013, OFNS_DESC %in% c("ARSON", "RAPE")) %>%
+          group_by(ADDR_PCT_CD,OFNS_DESC) %>%
+          summarise(num_crime_occurences = n(), population = mean(pop)) %>%
+          mutate(total = mean(num_crime_occurences))%>%
+          pivot_wider(names_from =OFNS_DESC, values_from = num_crime_occurences) %>%
+          ungroup()%>%
+          mutate(n = total/population) %>% ggplot() + geom_bar(aes(x = reorder(ADDR_PCT_CD, -total), y = total), stat = 'identity') + xlab("Precinct") + 
+          ylab(ylabel) + ggtitle("Crime by Precinct") + coord_flip()
+        return(g)
+
+
+
+nyc %>%filter(year %in% 2012:2013, OFNS_DESC %in% c("ARSON", "RAPE")) %>% group_by(ADDR_PCT_CD) %>% summarise(n = n(), dens = n/pop)
 ```
 
